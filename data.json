@@ -1,0 +1,9 @@
+{
+  "lastUpdated": "2025年12月22日",
+  "items": [
+    { "id": 1, "name": "Webサイト制作", "price": 50000, "unit": "式" },
+    { "id": 2, "name": "バナー作成", "price": 5000, "unit": "枚" },
+    { "id": 3, "name": "ライティング", "price": 3000, "unit": "記事" },
+    { "id": 4, "name": "保守管理費", "price": 10000, "unit": "月" }
+  ]
+}
