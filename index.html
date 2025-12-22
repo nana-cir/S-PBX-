@@ -18,14 +18,35 @@
             </div>
 
         <div class="result-area">
-            <div class="total-row">
-                <span>概算合計</span>
-                <span id="total-price" class="price">0 円</span>
-            </div>
-            <p class="tax-note">※税込表示（または税抜などルールに合わせて記述）</p>
             
+            <div class="result-section">
+                <div class="result-title">■ 初期費用</div>
+                <div class="price-row">
+                    <span>税別</span>
+                    <span id="initial-price-ex" class="price-sub">0 円</span>
+                </div>
+                <div class="price-row total-highlight">
+                    <span>税込合計</span>
+                    <span id="initial-price-in" class="price-main">0 円</span>
+                </div>
+            </div>
+
+            <hr class="divider">
+
+            <div class="result-section">
+                <div class="result-title">■ 月額費用</div>
+                <div class="price-row">
+                    <span>税別</span>
+                    <span id="monthly-price-ex" class="price-sub">0 円</span>
+                </div>
+                <div class="price-row total-highlight">
+                    <span>税込合計</span>
+                    <span id="monthly-price-in" class="price-main">0 円</span>
+                </div>
+            </div>
+
             <div id="screenshot-msg" class="screenshot-msg" style="display: none;">
-                <p>💡 計算結果が表示されています。<br>必要であればこの画面を<strong>スクリーンショット</strong>して保存してください。</p>
+                <p>💡 概算が表示されています。<br>この画面を<strong>スクリーンショット</strong>して保存してください。</p>
             </div>
         </div>
     </main>
