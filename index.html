@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>クラウドPBX概算見積シミュレーター</title>
     
     <link rel="apple-touch-icon" href="">
@@ -11,16 +11,19 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f8f9fa; font-family: "Helvetica Neue", Arial, sans-serif; }
-        .container { max-width: 960px; margin-top: 30px; margin-bottom: 50px; }
+        .container { max-width: 960px; margin-top: 20px; margin-bottom: 50px; }
         .card { border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .card-header { background-color: #0d6efd; color: white; font-weight: bold; }
         
+        /* ★スマホ対策：入力フォームの文字サイズを16px以上にして視認性を向上 */
+        input.form-control { font-size: 16px; }
+
         /* 見積結果エリア */
         .result-section { 
             display: none; 
             background-color: #ffffff !important; 
             color: #000000 !important; 
-            padding: 40px; 
+            padding: 20px; 
             border-radius: 8px;
             border: 1px solid #dee2e6;
         }
@@ -31,7 +34,7 @@
         /* 印刷時の制御 */
         @media print {
             body { background-color: white; }
-            .no-print { display: none !important; } /* 入力欄やボタンを隠す */
+            .no-print { display: none !important; } 
             .result-section { 
                 display: block !important; 
                 border: none; 
@@ -45,42 +48,42 @@
 <body>
 
 <div class="container" id="main-content">
-    <h2 class="text-center mb-4 no-print">クラウドPBX ヒアリング＆概算見積</h2>
+    <h2 class="text-center mb-4 no-print h4">クラウドPBX ヒアリング＆概算見積</h2>
 
     <div class="card no-print" id="hearingSection">
         <div class="card-header">
-            1. ヒアリングシート（現状・ご希望の構成）
+            1. ヒアリングシート（現状・ご希望）
         </div>
         <div class="card-body">
             <form id="hearingForm">
                 <div class="row mb-3">
-                    <div class="col-md-6">
+                    <div class="col-md-6 mb-3">
                         <label class="form-label">① 電話番号数（固定電話用）<span class="badge bg-secondary">FAX除く</span></label>
                         <input type="number" class="form-control" id="inputPhoneNum" value="1" min="1">
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-6 mb-3">
                         <label class="form-label">② チャネル数（同時通話数）</label>
                         <input type="number" class="form-control" id="inputChannelNum" value="1" min="1">
                     </div>
                 </div>
 
                 <div class="row mb-3">
-                    <div class="col-md-4">
+                    <div class="col-md-4 mb-3">
                         <label class="form-label">③ IP-Phone台数（固定電話機）</label>
                         <input type="number" class="form-control" id="inputIpPhoneNum" value="0" min="0">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-4 mb-3">
                         <label class="form-label">④ 拠点数</label>
                         <input type="number" class="form-control" id="inputSiteNum" value="1" min="1">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-4 mb-3">
                         <label class="form-label">⑤ スマホ台数（アプリ利用）</label>
                         <input type="number" class="form-control" id="inputSmartphoneNum" value="0" min="0">
                     </div>
                 </div>
 
-                <div class="d-grid gap-2 col-6 mx-auto mt-4">
-                    <button type="button" class="btn btn-outline-primary btn-lg" onclick="showAdjustment()">
+                <div class="d-grid gap-2 col-10 mx-auto mt-2">
+                    <button type="button" class="btn btn-outline-primary" onclick="showAdjustment()">
                         ヒアリング完了（調整へ進む） ▼
                     </button>
                 </div>
@@ -95,44 +98,48 @@
         <div class="card-body">
             <p class="small text-muted mb-3">※ヒアリング内容に基づき自動設定されています。必要に応じて変更してください。</p>
             <div class="row">
-                <div class="col-md-6 mb-2">
+                <div class="col-md-6 mb-3">
                     <label class="small fw-bold">スマホ台数（ID課金対象）</label>
-                    <input type="number" id="confSmartphoneQty" class="form-control form-control-sm" value="0">
+                    <input type="number" id="confSmartphoneQty" class="form-control" value="0">
                     <div class="form-text text-muted" style="font-size: 0.75rem;">※変更するとID利用料が変わります</div>
                 </div>
+                <div class="col-md-6 mb-3">
+                    <label class="small fw-bold">IP-Phone台数（ID数・初期費用）</label>
+                    <input type="number" id="confIpPhoneHwQty" class="form-control" value="0">
+                    <div class="form-text text-muted" style="font-size: 0.75rem;">※変更するとID利用料・機器代が変わります</div>
+                </div>
+            </div>
+            
+            <hr class="my-2">
+            
+            <div class="row">
                  <div class="col-md-6 mb-2">
                     <label class="small">Arcstar Smart PBX基本契約数 (@5,000)</label>
                     <input type="number" id="confSmartPbxBaseQty" class="form-control form-control-sm" value="1">
                 </div>
-            </div>
-            <div class="row">
                 <div class="col-md-6 mb-2">
                     <label class="small">Arcstar IP-Voice基本契約数 (@580)</label>
                     <input type="number" id="confIpVoiceBaseQty" class="form-control form-control-sm" value="1">
                 </div>
+            </div>
+            <div class="row">
                 <div class="col-md-6 mb-2">
                     <label class="small">SmartPBX新設工事費契約数 (@14,000)</label>
                     <input type="number" id="confSmartPbxInitQty" class="form-control form-control-sm" value="1">
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-2">
+                 <div class="col-md-6 mb-2">
                     <label class="small">IP-Voice基本工事費契約数 (@2,800)</label>
                     <input type="number" id="confIpVoiceInitQty" class="form-control form-control-sm" value="1">
                 </div>
+            </div>
+            <div class="row">
                 <div class="col-md-6 mb-2">
                     <label class="small">IP-Voice MNP手数料数 (@2,000)</label>
                     <input type="number" id="confMnpQty" class="form-control form-control-sm" value="1">
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-6 mb-2">
-                    <label class="small">IP-Phone台数（初期費用計算用 @49,000）</label>
-                    <input type="number" id="confIpPhoneHwQty" class="form-control form-control-sm" value="0">
-                </div>
-            </div>
 
-            <div class="d-grid gap-2 col-8 mx-auto mt-4">
+            <div class="d-grid gap-2 col-10 mx-auto mt-4">
                 <button type="button" class="btn btn-primary btn-lg shadow" onclick="calculateQuote()">
                     お見積書を表示する ▼
                 </button>
@@ -143,21 +150,21 @@
     <div class="result-section shadow" id="quotationResult">
         
         <div class="mb-4">
-            <h3 class="border-bottom pb-3 mb-4 text-center">御見積概算書</h3>
+            <h3 class="border-bottom pb-3 mb-4 text-center h4">御見積概算書</h3>
             
             <div class="alert alert-light border text-center" role="alert">
-                <h4 class="alert-heading mb-0">ID数合計: <span id="displayIdCount" class="fw-bold">0</span> ID</h4>
-                <small class="text-muted">（内訳：番号 <span id="dispNum"></span> + 拠点 <span id="dispSite"></span> + IP-Phone <span id="dispIp"></span> + スマホ <span id="dispSmart"></span>）</small>
+                <h4 class="alert-heading mb-0 h5">ID数合計: <span id="displayIdCount" class="fw-bold">0</span> ID</h4>
+                <small class="text-muted" style="font-size: 0.8rem;">（内訳：番号 <span id="dispNum"></span> + 拠点 <span id="dispSite"></span> + IP-Phone <span id="dispIp"></span> + スマホ <span id="dispSmart"></span>）</small>
             </div>
 
-            <h5 class="mt-4 border-bottom pb-2">【月額費用】</h5>
-            <table class="table table-striped table-hover table-bordered">
+            <h5 class="mt-4 border-bottom pb-2 h6">【月額費用】</h5>
+            <table class="table table-striped table-hover table-bordered table-sm">
                 <thead class="table-secondary">
                     <tr>
                         <th class="text-center" style="width: 40%">項目名</th>
                         <th class="text-center" style="width: 20%">単価</th>
                         <th class="text-center" style="width: 15%">数量</th>
-                        <th class="text-center" style="width: 25%">金額（円）</th>
+                        <th class="text-center" style="width: 25%">金額</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -180,13 +187,13 @@
                         <td class="text-end fw-bold" id="rowIpVoiceBasePrice">580</td>
                     </tr>
                     <tr>
-                        <td>チャネル追加料<br><small class="text-muted">(チャネル数 - 1契約)</small></td>
+                        <td>チャネル追加料<br><small class="text-muted" style="font-size:0.7rem">(チャネル数 - 1契約)</small></td>
                         <td class="text-end">580</td>
                         <td class="text-end" id="rowChAddQty">0</td>
                         <td class="text-end fw-bold" id="rowChAddPrice">0</td>
                     </tr>
                     <tr>
-                        <td>番号追加料金<br><small class="text-muted">(電話番号数 - 1契約)</small></td>
+                        <td>番号追加料金<br><small class="text-muted" style="font-size:0.7rem">(電話番号数 - 1契約)</small></td>
                         <td class="text-end">100</td>
                         <td class="text-end" id="rowNumAddQty">0</td>
                         <td class="text-end fw-bold" id="rowNumAddPrice">0</td>
@@ -195,19 +202,19 @@
                 <tfoot class="table-light">
                     <tr>
                         <th colspan="3" class="text-end">月額費用合計</th>
-                        <th class="text-end total-price" id="totalMonthly">0</th>
+                        <th class="text-end total-price h5" id="totalMonthly">0</th>
                     </tr>
                 </tfoot>
             </table>
 
-            <h5 class="mt-4 border-bottom pb-2">【初期費用】</h5>
-            <table class="table table-striped table-hover table-bordered">
+            <h5 class="mt-4 border-bottom pb-2 h6">【初期費用】</h5>
+            <table class="table table-striped table-hover table-bordered table-sm">
                 <thead class="table-secondary">
                     <tr>
                         <th class="text-center" style="width: 40%">項目名</th>
                         <th class="text-center" style="width: 20%">単価</th>
                         <th class="text-center" style="width: 15%">数量</th>
-                        <th class="text-center" style="width: 25%">金額（円）</th>
+                        <th class="text-center" style="width: 25%">金額</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -239,7 +246,7 @@
                 <tfoot class="table-light">
                     <tr>
                         <th colspan="3" class="text-end">初期費用合計</th>
-                        <th class="text-end total-price" id="totalInitial">0</th>
+                        <th class="text-end total-price h5" id="totalInitial">0</th>
                     </tr>
                 </tfoot>
             </table>
@@ -254,24 +261,20 @@
     </div>
     
     <div class="text-center mt-4 mb-5 no-print" id="pdfBtnArea" style="display:none;">
-        <div class="d-flex justify-content-center gap-3">
-            <button class="btn btn-danger btn-lg" onclick="generatePDF()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-pdf-fill" viewBox="0 0 16 16">
-                    <path d="M5.523 12.424c.14-.082.293-.162.459-.238a7.878 7.878 0 0 1-.45.606c-.28.337-.498.516-.635.572a.266.266 0 0 1-.035.012.282.282 0 0 1-.026-.044c-.056-.11-.054-.216.04-.36.106-.165.319-.354.647-.548zm2.455-1.647c-.119.025-.237.05-.356.078a21.148 21.148 0 0 0 .5-1.05 12.045 12.045 0 0 0 .51.858c-.217.032-.436.07-.654.114zm2.525.939a3.881 3.881 0 0 1-.435-.41c.228.005.434.022.612.054.317.057.466.147.518.209a.095.095 0 0 1 .026.064.436.436 0 0 1-.72.083z"/>
-                    <path d="M4 0h5.293A1 1 0 0 1 10 .293L13.707 4a1 1 0 0 1 .293.707V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2zm5.5 1.5v2a1 1 0 0 0 1 1h2l-3-3zM4.165 13.668c.09.18.23.343.438.419.207.075.412.04.58-.03.318-.13.635-.436.926-.786.333-.401.683-.927 1.021-1.51a11.651 11.651 0 0 1 1.997-.406c.342.38.637.716.867.98.252.288.45.52.591.663.15.153.25.29.29.431.025.088-.002.182-.075.257-.096.099-.258.115-.466.075-.487-.092-1.202-.538-2.223-1.467-.936-.848-1.594-1.637-1.896-1.922a4.8 4.8 0 0 1-1.354.195c-.476.012-.907-.052-1.127-.193-.25-.16-.39-.42-.224-.707.032-.054.08-.1.144-.135.215-.116.518-.093.842.029.232.087.433.194.59.319a14.787 14.787 0 0 1-1.09 3.064c-.206.39-.33.74-.356.974zm2.846-5.024c-.031-.19-.077-.42-.14-.68-.192-.782-.423-1.62-.647-2.313a18.356 18.356 0 0 0-.85-1.933 21.01 21.01 0 0 0-1.222 1.49c.356.556.716 1.054 1.055 1.472a23.156 23.156 0 0 0 1.804 1.964z"/>
-                </svg>
-                PDF保存 (v1)
-            </button>
-            
+        <div class="d-grid gap-2 col-10 mx-auto">
             <button class="btn btn-dark btn-lg" onclick="window.print()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
                     <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
                     <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
                 </svg>
-                PDF保存・印刷 (予備)
+                PDF保存・印刷
+            </button>
+            <p class="text-muted mt-1" style="font-size: 0.75rem;">※iPhoneの場合は、共有ボタンから「プリント」を選び、プレビューをピンチアウト（拡大）するとPDF保存できます。</p>
+
+            <button class="btn btn-outline-danger btn-sm mt-3" onclick="generatePDF()">
+                旧方式でPDF保存 (表示が崩れる場合のみ使用)
             </button>
         </div>
-        <p class="text-muted mt-2 small">※「PDF保存(v1)」で真っ白になる場合は、右の「予備」ボタンを押し、送信先で「PDFに保存」を選択してください。</p>
     </div>
 </div>
 
@@ -317,7 +320,7 @@
         const phoneNumHearing = parseInt(document.getElementById("inputPhoneNum").value) || 0;
         const channelNumHearing = parseInt(document.getElementById("inputChannelNum").value) || 0;
         const siteNum = parseInt(document.getElementById("inputSiteNum").value) || 0;
-        const ipPhoneNum = parseInt(document.getElementById("inputIpPhoneNum").value) || 0;
+        // ※ここではヒアリングのIP-Phone台数は使わず、調整値を使う
 
         // 調整項目の取得（可変）
         const smartNumAdjusted = parseInt(document.getElementById("confSmartphoneQty").value) || 0;
@@ -326,16 +329,18 @@
         const smartPbxInitQty = parseInt(document.getElementById("confSmartPbxInitQty").value) || 0;
         const ipVoiceInitQty = parseInt(document.getElementById("confIpVoiceInitQty").value) || 0;
         const mnpQty = parseInt(document.getElementById("confMnpQty").value) || 0;
-        const ipPhoneHwQty = parseInt(document.getElementById("confIpPhoneHwQty").value) || 0;
+        
+        // ★修正点: ID数計算に「調整後のIP-Phone台数」を使用する
+        const ipPhoneAdjusted = parseInt(document.getElementById("confIpPhoneHwQty").value) || 0;
 
-        // ID数 = 電話番号 + 拠点 + 固定電話 + スマホ(調整値)
-        const idCount = phoneNumHearing + siteNum + ipPhoneNum + smartNumAdjusted;
+        // ID数 = 電話番号 + 拠点 + 固定電話(調整値) + スマホ(調整値)
+        const idCount = phoneNumHearing + siteNum + ipPhoneAdjusted + smartNumAdjusted;
         
         // 内訳表示更新
         document.getElementById("displayIdCount").innerText = idCount;
         document.getElementById("dispNum").innerText = phoneNumHearing;
         document.getElementById("dispSite").innerText = siteNum;
-        document.getElementById("dispIp").innerText = ipPhoneNum;
+        document.getElementById("dispIp").innerText = ipPhoneAdjusted; // 調整値を表示
         document.getElementById("dispSmart").innerText = smartNumAdjusted;
 
         // --- 月額費用の計算 ---
@@ -381,15 +386,15 @@
         document.getElementById("rowMnpQty").innerText = mnpQty;
         document.getElementById("rowMnpPrice").innerText = mnpPrice.toLocaleString();
 
-        const ipPhoneHwPrice = ipPhoneHwQty * 49000;
-        document.getElementById("rowIpPhoneHwQty").innerText = ipPhoneHwQty;
+        const ipPhoneHwPrice = ipPhoneAdjusted * 49000;
+        document.getElementById("rowIpPhoneHwQty").innerText = ipPhoneAdjusted;
         document.getElementById("rowIpPhoneHwPrice").innerText = ipPhoneHwPrice.toLocaleString();
 
         const totalInitial = smartPbxInitPrice + ipVoiceInitPrice + mnpPrice + ipPhoneHwPrice;
         document.getElementById("totalInitial").innerText = totalInitial.toLocaleString();
     }
 
-    // PDF生成関数 (v1 ライブラリ)
+    // PDF生成関数 (v1 ライブラリ) - 予備用
     function generatePDF() {
         const element = document.getElementById('quotationResult');
         const opt = {
