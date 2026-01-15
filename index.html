@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>クラウドPBX概算見積シミュレーター</title>
+    
+    <link rel="apple-touch-icon" href="">
+    <link rel="icon" href="">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f8f9fa; font-family: "Helvetica Neue", Arial, sans-serif; }
@@ -14,16 +18,14 @@
         /* 見積結果エリア（PDF化対象）のスタイル */
         .result-section { 
             display: none; /* 計算ボタンを押すまで非表示 */
-            background-color: #ffffff; /* PDF化のために白背景を明示 */
-            padding: 20px;
+            background-color: #ffffff !important; /* 背景を白に強制 */
+            color: #000000 !important; /* 文字色を黒に強制 */
+            padding: 30px; /* 余白を少し広めに */
             border-radius: 8px;
         }
         
         .total-price { font-size: 1.5rem; font-weight: bold; color: #d63384; }
         .note-text { font-size: 0.85rem; color: #6c757d; }
-
-        /* PDF生成時に隠すクラス */
-        .hide-on-pdf { } 
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
@@ -289,8 +291,8 @@
         const idCount = phoneNumHearing + siteNum + ipPhoneNum + smartNumAdjusted;
         
         // 調整項目の取得
-        const phoneNum = phoneNumHearing; // 基本はヒアリング値（番号数自体の調整要望はなかったのでそのまま）
-        const channelNum = channelNumHearing; // 同上
+        const phoneNum = phoneNumHearing; 
+        const channelNum = channelNumHearing; 
 
         // 内訳表示更新
         document.getElementById("displayIdCount").innerText = idCount;
@@ -377,7 +379,8 @@
             margin:       0.5,
             filename:     'quotation_estimate.pdf',
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true }, // useCORSを追加
+            // ★重要修正★ scrollY: 0 を追加して、スクロール位置によるズレ（真っ白）を防ぐ
+            html2canvas:  { scale: 2, useCORS: true, scrollY: 0 }, 
             jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
         };
         
