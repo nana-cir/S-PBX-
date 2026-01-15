@@ -10,19 +10,20 @@
         .container { max-width: 960px; margin-top: 30px; margin-bottom: 50px; }
         .card { border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .card-header { background-color: #0d6efd; color: white; font-weight: bold; }
-        .result-section { display: none; /* 計算ボタンを押すまで非表示 */ }
+        
+        /* 見積結果エリア（PDF化対象）のスタイル */
+        .result-section { 
+            display: none; /* 計算ボタンを押すまで非表示 */
+            background-color: #ffffff; /* PDF化のために白背景を明示 */
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
         .total-price { font-size: 1.5rem; font-weight: bold; color: #d63384; }
         .note-text { font-size: 0.85rem; color: #6c757d; }
-        
-        /* PDF印刷用のスタイル調整 */
-        @media print {
-            .no-print { display: none !important; }
-            .result-section { display: block !important; }
-            body { background-color: white; }
-            .card { box-shadow: none; border: 1px solid #ddd; }
-            /* 印刷時は入力フォームを隠して結果だけ見せる場合 */
-            #hearingSection { display: none; } 
-        }
+
+        /* PDF生成時に隠すクラス */
+        .hide-on-pdf { } 
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
@@ -31,7 +32,7 @@
 <div class="container" id="main-content">
     <h2 class="text-center mb-4">クラウドPBX ヒアリング＆概算見積</h2>
 
-    <div class="card no-print-section" id="hearingSection">
+    <div class="card" id="hearingSection">
         <div class="card-header">
             📋 ヒアリングシート（現状・ご希望の構成）
         </div>
@@ -71,167 +72,171 @@
         </div>
     </div>
 
-    <div class="result-section" id="quotationResult">
+    <div id="adjustmentSection" class="card mb-4" style="display:none;">
+        <div class="card-header bg-secondary text-white">
+            ⚙️ 契約数調整（必要な場合のみ変更してください）
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label class="small fw-bold">スマホ台数（ID数）</label>
+                    <input type="number" id="confSmartphoneQty" class="form-control form-control-sm" value="0" onchange="reCalc()">
+                    <div class="form-text text-muted" style="font-size: 0.75rem;">※ID利用料の計算に影響します</div>
+                </div>
+                 <div class="col-md-6 mb-2">
+                    <label class="small">Arcstar Smart PBX基本契約数 (@5,000)</label>
+                    <input type="number" id="confSmartPbxBaseQty" class="form-control form-control-sm" value="1" onchange="reCalc()">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label class="small">Arcstar IP-Voice基本契約数 (@580)</label>
+                    <input type="number" id="confIpVoiceBaseQty" class="form-control form-control-sm" value="1" onchange="reCalc()">
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label class="small">SmartPBX新設工事費契約数 (@14,000)</label>
+                    <input type="number" id="confSmartPbxInitQty" class="form-control form-control-sm" value="1" onchange="reCalc()">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label class="small">IP-Voice基本工事費契約数 (@2,800)</label>
+                    <input type="number" id="confIpVoiceInitQty" class="form-control form-control-sm" value="1" onchange="reCalc()">
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label class="small">IP-Voice MNP手数料数 (@2,000)</label>
+                    <input type="number" id="confMnpQty" class="form-control form-control-sm" value="1" onchange="reCalc()">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label class="small">IP-Phone台数（初期費用計算用 @49,000）</label>
+                    <input type="number" id="confIpPhoneHwQty" class="form-control form-control-sm" value="0" onchange="reCalc()">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="result-section shadow-sm border" id="quotationResult">
         
-        <div class="card mb-4 no-print-pdf">
-            <div class="card-header bg-secondary">
-                ⚙️ 契約数調整（必要な場合のみ変更してください）
+        <div class="mb-4">
+            <h4 class="border-bottom pb-2">📊 お見積り概算結果</h4>
+            <div class="alert alert-info mt-3" role="alert">
+                <h5 class="alert-heading">ID数合計: <span id="displayIdCount" class="fw-bold">0</span> ID</h5>
+                <small>（内訳：番号 <span id="dispNum"></span> + 拠点 <span id="dispSite"></span> + IP-Phone <span id="dispIp"></span> + スマホ <span id="dispSmart"></span>）</small>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6 mb-2">
-                        <label class="small">Arcstar Smart PBX基本契約数 (@5,000)</label>
-                        <input type="number" id="confSmartPbxBaseQty" class="form-control form-control-sm" value="1" onchange="reCalc()">
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <label class="small">Arcstar IP-Voice基本契約数 (@580)</label>
-                        <input type="number" id="confIpVoiceBaseQty" class="form-control form-control-sm" value="1" onchange="reCalc()">
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <label class="small">SmartPBX新設工事費契約数 (@14,000)</label>
-                        <input type="number" id="confSmartPbxInitQty" class="form-control form-control-sm" value="1" onchange="reCalc()">
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <label class="small">IP-Voice基本工事費契約数 (@2,800)</label>
-                        <input type="number" id="confIpVoiceInitQty" class="form-control form-control-sm" value="1" onchange="reCalc()">
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-2">
-                        <label class="small">IP-Voice MNP手数料数 (@2,000)</label>
-                        <input type="number" id="confMnpQty" class="form-control form-control-sm" value="1" onchange="reCalc()">
-                        <div class="form-text text-muted" style="font-size: 0.75rem;">※新規発番の場合は0にしてください</div>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <label class="small">IP-Phone台数（初期費用計算用 @49,000）</label>
-                        <input type="number" id="confIpPhoneHwQty" class="form-control form-control-sm" value="0" onchange="reCalc()">
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <div class="card mb-4">
-            <div class="card-header">
-                📊 お見積り概算結果
-            </div>
-            <div class="card-body">
-                <div class="alert alert-info" role="alert">
-                    <h5 class="alert-heading">ID数合計: <span id="displayIdCount" class="fw-bold">0</span> ID</h5>
-                    <small>（内訳：番号 <span id="dispNum"></span> + 拠点 <span id="dispSite"></span> + IP-Phone <span id="dispIp"></span> + スマホ <span id="dispSmart"></span>）</small>
-                </div>
+            <h5 class="mt-4 border-bottom pb-2">【月額費用】</h5>
+            <table class="table table-striped table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>項目名</th>
+                        <th class="text-end">単価</th>
+                        <th class="text-end">数量</th>
+                        <th class="text-end">金額（円）</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>ID利用料</td>
+                        <td class="text-end">500</td>
+                        <td class="text-end" id="rowIdCount">0</td>
+                        <td class="text-end" id="rowIdPrice">0</td>
+                    </tr>
+                    <tr>
+                        <td>Arcstar Smart PBX基本料</td>
+                        <td class="text-end">5,000</td>
+                        <td class="text-end" id="rowSmartPbxBaseQty">1</td>
+                        <td class="text-end" id="rowSmartPbxBasePrice">5,000</td>
+                    </tr>
+                    <tr>
+                        <td>Arcstar IP-Voice基本料</td>
+                        <td class="text-end">580</td>
+                        <td class="text-end" id="rowIpVoiceBaseQty">1</td>
+                        <td class="text-end" id="rowIpVoiceBasePrice">580</td>
+                    </tr>
+                    <tr>
+                        <td>チャネル追加料<br><small class="text-muted">(チャネル数 - 1契約)</small></td>
+                        <td class="text-end">580</td>
+                        <td class="text-end" id="rowChAddQty">0</td>
+                        <td class="text-end" id="rowChAddPrice">0</td>
+                    </tr>
+                    <tr>
+                        <td>番号追加料金<br><small class="text-muted">(電話番号数 - 1契約)</small></td>
+                        <td class="text-end">100</td>
+                        <td class="text-end" id="rowNumAddQty">0</td>
+                        <td class="text-end" id="rowNumAddPrice">0</td>
+                    </tr>
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <th colspan="3" class="text-end">月額費用合計</th>
+                        <th class="text-end total-price" id="totalMonthly">0</th>
+                    </tr>
+                </tfoot>
+            </table>
 
-                <h5 class="mt-4 border-bottom pb-2">【月額費用】</h5>
-                <table class="table table-striped table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>項目名</th>
-                            <th class="text-end">単価</th>
-                            <th class="text-end">数量</th>
-                            <th class="text-end">金額（円）</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>ID利用料</td>
-                            <td class="text-end">500</td>
-                            <td class="text-end" id="rowIdCount">0</td>
-                            <td class="text-end" id="rowIdPrice">0</td>
-                        </tr>
-                        <tr>
-                            <td>Arcstar Smart PBX基本料</td>
-                            <td class="text-end">5,000</td>
-                            <td class="text-end" id="rowSmartPbxBaseQty">1</td>
-                            <td class="text-end" id="rowSmartPbxBasePrice">5,000</td>
-                        </tr>
-                        <tr>
-                            <td>Arcstar IP-Voice基本料</td>
-                            <td class="text-end">580</td>
-                            <td class="text-end" id="rowIpVoiceBaseQty">1</td>
-                            <td class="text-end" id="rowIpVoiceBasePrice">580</td>
-                        </tr>
-                        <tr>
-                            <td>チャネル追加料<br><small class="text-muted">(チャネル数 - 1契約)</small></td>
-                            <td class="text-end">580</td>
-                            <td class="text-end" id="rowChAddQty">0</td>
-                            <td class="text-end" id="rowChAddPrice">0</td>
-                        </tr>
-                        <tr>
-                            <td>番号追加料金<br><small class="text-muted">(電話番号数 - 1契約)</small></td>
-                            <td class="text-end">100</td>
-                            <td class="text-end" id="rowNumAddQty">0</td>
-                            <td class="text-end" id="rowNumAddPrice">0</td>
-                        </tr>
-                    </tbody>
-                    <tfoot class="table-light">
-                        <tr>
-                            <th colspan="3" class="text-end">月額費用合計</th>
-                            <th class="text-end total-price" id="totalMonthly">0</th>
-                        </tr>
-                    </tfoot>
-                </table>
+            <h5 class="mt-4 border-bottom pb-2">【初期費用】</h5>
+            <table class="table table-striped table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>項目名</th>
+                        <th class="text-end">単価</th>
+                        <th class="text-end">数量</th>
+                        <th class="text-end">金額（円）</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>SmartPBX新設工事費</td>
+                        <td class="text-end">14,000</td>
+                        <td class="text-end" id="rowSmartPbxInitQty">1</td>
+                        <td class="text-end" id="rowSmartPbxInitPrice">14,000</td>
+                    </tr>
+                    <tr>
+                        <td>IP-Voice基本工事費</td>
+                        <td class="text-end">2,800</td>
+                        <td class="text-end" id="rowIpVoiceInitQty">1</td>
+                        <td class="text-end" id="rowIpVoiceInitPrice">2,800</td>
+                    </tr>
+                    <tr>
+                        <td>IP-Voice MNP手数料</td>
+                        <td class="text-end">2,000</td>
+                        <td class="text-end" id="rowMnpQty">1</td>
+                        <td class="text-end" id="rowMnpPrice">2,000</td>
+                    </tr>
+                    <tr>
+                        <td>IP-Phone機器代金</td>
+                        <td class="text-end">49,000</td>
+                        <td class="text-end" id="rowIpPhoneHwQty">0</td>
+                        <td class="text-end" id="rowIpPhoneHwPrice">0</td>
+                    </tr>
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <th colspan="3" class="text-end">初期費用合計</th>
+                        <th class="text-end total-price" id="totalInitial">0</th>
+                    </tr>
+                </tfoot>
+            </table>
 
-                <h5 class="mt-4 border-bottom pb-2">【初期費用】</h5>
-                <table class="table table-striped table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>項目名</th>
-                            <th class="text-end">単価</th>
-                            <th class="text-end">数量</th>
-                            <th class="text-end">金額（円）</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>SmartPBX新設工事費</td>
-                            <td class="text-end">14,000</td>
-                            <td class="text-end" id="rowSmartPbxInitQty">1</td>
-                            <td class="text-end" id="rowSmartPbxInitPrice">14,000</td>
-                        </tr>
-                        <tr>
-                            <td>IP-Voice基本工事費</td>
-                            <td class="text-end">2,800</td>
-                            <td class="text-end" id="rowIpVoiceInitQty">1</td>
-                            <td class="text-end" id="rowIpVoiceInitPrice">2,800</td>
-                        </tr>
-                        <tr>
-                            <td>IP-Voice MNP手数料</td>
-                            <td class="text-end">2,000</td>
-                            <td class="text-end" id="rowMnpQty">1</td>
-                            <td class="text-end" id="rowMnpPrice">2,000</td>
-                        </tr>
-                        <tr>
-                            <td>IP-Phone機器代金</td>
-                            <td class="text-end">49,000</td>
-                            <td class="text-end" id="rowIpPhoneHwQty">0</td>
-                            <td class="text-end" id="rowIpPhoneHwPrice">0</td>
-                        </tr>
-                    </tbody>
-                    <tfoot class="table-light">
-                        <tr>
-                            <th colspan="3" class="text-end">初期費用合計</th>
-                            <th class="text-end total-price" id="totalInitial">0</th>
-                        </tr>
-                    </tfoot>
-                </table>
-
-                <div class="mt-4 p-3 bg-light border rounded">
-                    <p class="mb-1 note-text">※<span id="currentDate"></span>現在の単価です。</p>
-                    <p class="mb-1 note-text text-danger fw-bold">一度画面を閉じるとデータは消えます。スクショもしくは下記PDF変換よりデータ保管をお願いします。</p>
-                    <p class="mb-3 note-text fw-bold">こちらの見積もりは概算での見積金額となります。正式な金額は、別途お知らせいたします。</p>
-                    <p class="mb-1 note-text small text-muted">※MNP（同番移行）の可否については、現在のご利用回線やエリアの状況により異なりますので、別途担当者による調査が必要です。</p>
-                    
-                    <div class="text-center no-print-pdf mt-3">
-                        <button class="btn btn-danger" onclick="generatePDF()">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-pdf-fill" viewBox="0 0 16 16">
-                                <path d="M5.523 12.424c.14-.082.293-.162.459-.238a7.878 7.878 0 0 1-.45.606c-.28.337-.498.516-.635.572a.266.266 0 0 1-.035.012.282.282 0 0 1-.026-.044c-.056-.11-.054-.216.04-.36.106-.165.319-.354.647-.548zm2.455-1.647c-.119.025-.237.05-.356.078a21.148 21.148 0 0 0 .5-1.05 12.045 12.045 0 0 0 .51.858c-.217.032-.436.07-.654.114zm2.525.939a3.881 3.881 0 0 1-.435-.41c.228.005.434.022.612.054.317.057.466.147.518.209a.095.095 0 0 1 .026.064.436.436 0 0 1-.72.083z"/>
-                                <path d="M4 0h5.293A1 1 0 0 1 10 .293L13.707 4a1 1 0 0 1 .293.707V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2zm5.5 1.5v2a1 1 0 0 0 1 1h2l-3-3zM4.165 13.668c.09.18.23.343.438.419.207.075.412.04.58-.03.318-.13.635-.436.926-.786.333-.401.683-.927 1.021-1.51a11.651 11.651 0 0 1 1.997-.406c.342.38.637.716.867.98.252.288.45.52.591.663.15.153.25.29.29.431.025.088-.002.182-.075.257-.096.099-.258.115-.466.075-.487-.092-1.202-.538-2.223-1.467-.936-.848-1.594-1.637-1.896-1.922a4.8 4.8 0 0 1-1.354.195c-.476.012-.907-.052-1.127-.193-.25-.16-.39-.42-.224-.707.032-.054.08-.1.144-.135.215-.116.518-.093.842.029.232.087.433.194.59.319a14.787 14.787 0 0 1-1.09 3.064c-.206.39-.33.74-.356.974zm2.846-5.024c-.031-.19-.077-.42-.14-.68-.192-.782-.423-1.62-.647-2.313a18.356 18.356 0 0 0-.85-1.933 21.01 21.01 0 0 0-1.222 1.49c.356.556.716 1.054 1.055 1.472a23.156 23.156 0 0 0 1.804 1.964z"/>
-                            </svg>
-                            PDFとして保存・印刷
-                        </button>
-                    </div>
-                </div>
+            <div class="mt-4 p-3 bg-light border rounded">
+                <p class="mb-1 note-text">※<span id="currentDate"></span>現在の単価です。</p>
+                <p class="mb-1 note-text text-danger fw-bold">一度画面を閉じるとデータは消えます。スクショもしくは下記PDF変換よりデータ保管をお願いします。</p>
+                <p class="mb-3 note-text fw-bold">こちらの見積もりは概算での見積金額となります。正式な金額は、別途お知らせいたします。</p>
+                <p class="mb-1 note-text small text-muted">※MNP（同番移行）の可否については、現在のご利用回線やエリアの状況により異なりますので、別途担当者による調査が必要です。</p>
             </div>
         </div>
+    </div>
+    
+    <div class="text-center mt-4 mb-5" id="pdfBtnArea" style="display:none;">
+        <button class="btn btn-danger btn-lg" onclick="generatePDF()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-pdf-fill" viewBox="0 0 16 16">
+                <path d="M5.523 12.424c.14-.082.293-.162.459-.238a7.878 7.878 0 0 1-.45.606c-.28.337-.498.516-.635.572a.266.266 0 0 1-.035.012.282.282 0 0 1-.026-.044c-.056-.11-.054-.216.04-.36.106-.165.319-.354.647-.548zm2.455-1.647c-.119.025-.237.05-.356.078a21.148 21.148 0 0 0 .5-1.05 12.045 12.045 0 0 0 .51.858c-.217.032-.436.07-.654.114zm2.525.939a3.881 3.881 0 0 1-.435-.41c.228.005.434.022.612.054.317.057.466.147.518.209a.095.095 0 0 1 .026.064.436.436 0 0 1-.72.083z"/>
+                <path d="M4 0h5.293A1 1 0 0 1 10 .293L13.707 4a1 1 0 0 1 .293.707V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2zm5.5 1.5v2a1 1 0 0 0 1 1h2l-3-3zM4.165 13.668c.09.18.23.343.438.419.207.075.412.04.58-.03.318-.13.635-.436.926-.786.333-.401.683-.927 1.021-1.51a11.651 11.651 0 0 1 1.997-.406c.342.38.637.716.867.98.252.288.45.52.591.663.15.153.25.29.29.431.025.088-.002.182-.075.257-.096.099-.258.115-.466.075-.487-.092-1.202-.538-2.223-1.467-.936-.848-1.594-1.637-1.896-1.922a4.8 4.8 0 0 1-1.354.195c-.476.012-.907-.052-1.127-.193-.25-.16-.39-.42-.224-.707.032-.054.08-.1.144-.135.215-.116.518-.093.842.029.232.087.433.194.59.319a14.787 14.787 0 0 1-1.09 3.064c-.206.39-.33.74-.356.974zm2.846-5.024c-.031-.19-.077-.42-.14-.68-.192-.782-.423-1.62-.647-2.313a18.356 18.356 0 0 0-.85-1.933 21.01 21.01 0 0 0-1.222 1.49c.356.556.716 1.054 1.055 1.472a23.156 23.156 0 0 0 1.804 1.964z"/>
+            </svg>
+            PDFとして保存・印刷
+        </button>
     </div>
 </div>
 
@@ -250,46 +255,49 @@
         const siteNum = parseInt(document.getElementById("inputSiteNum").value) || 0;
         const smartNum = parseInt(document.getElementById("inputSmartphoneNum").value) || 0;
 
-        // ID数計算
-        const idCount = phoneNum + siteNum + ipPhoneNum + smartNum;
-
         // 計算結果表示エリアを表示
         document.getElementById("quotationResult").style.display = "block";
+        document.getElementById("adjustmentSection").style.display = "block";
+        document.getElementById("pdfBtnArea").style.display = "block";
         
-        // MNP手数料などのデフォルト値計算
-        // 自動的に「番号数＝MNP数」として計算フォームにセットします（後で手動変更可能）
+        // 調整用フォームへの初期値セット
         document.getElementById("confMnpQty").value = phoneNum; 
         document.getElementById("confIpPhoneHwQty").value = ipPhoneNum;
+        
+        // ★ご要望：スマホ台数も調整可能にするため初期値をセット
+        document.getElementById("confSmartphoneQty").value = smartNum;
 
         // 画面スクロール
-        document.getElementById("quotationResult").scrollIntoView({behavior: "smooth"});
+        document.getElementById("adjustmentSection").scrollIntoView({behavior: "smooth"});
 
         // 実際の計算実行
-        reCalc(idCount, phoneNum, channelNum);
+        reCalc();
     }
 
     // 再計算ロジック
-    function reCalc(passedIdCount = null, passedPhoneNum = null, passedChannelNum = null) {
-        // ヒアリング値の再取得（引数がない場合用）
-        let phoneNum = passedPhoneNum;
-        let channelNum = passedChannelNum;
-        let idCount = passedIdCount;
+    function reCalc() {
+        // ヒアリングフォームからの値（固定的なもの）
+        const phoneNumHearing = parseInt(document.getElementById("inputPhoneNum").value) || 0;
+        const channelNumHearing = parseInt(document.getElementById("inputChannelNum").value) || 0;
+        const siteNum = parseInt(document.getElementById("inputSiteNum").value) || 0;
+        const ipPhoneNum = parseInt(document.getElementById("inputIpPhoneNum").value) || 0;
 
-        if (phoneNum === null) {
-             phoneNum = parseInt(document.getElementById("inputPhoneNum").value) || 0;
-             channelNum = parseInt(document.getElementById("inputChannelNum").value) || 0;
-             const ipPhoneNum = parseInt(document.getElementById("inputIpPhoneNum").value) || 0;
-             const siteNum = parseInt(document.getElementById("inputSiteNum").value) || 0;
-             const smartNum = parseInt(document.getElementById("inputSmartphoneNum").value) || 0;
-             idCount = phoneNum + siteNum + ipPhoneNum + smartNum;
-        }
+        // ★ID数は「調整後」のスマホ台数を使って計算します
+        const smartNumAdjusted = parseInt(document.getElementById("confSmartphoneQty").value) || 0;
+        
+        // ID数 = 電話番号 + 拠点 + 固定電話 + スマホ(調整値)
+        const idCount = phoneNumHearing + siteNum + ipPhoneNum + smartNumAdjusted;
+        
+        // 調整項目の取得
+        const phoneNum = phoneNumHearing; // 基本はヒアリング値（番号数自体の調整要望はなかったのでそのまま）
+        const channelNum = channelNumHearing; // 同上
 
         // 内訳表示更新
         document.getElementById("displayIdCount").innerText = idCount;
         document.getElementById("dispNum").innerText = phoneNum;
-        document.getElementById("dispSite").innerText = parseInt(document.getElementById("inputSiteNum").value) || 0;
-        document.getElementById("dispIp").innerText = parseInt(document.getElementById("inputIpPhoneNum").value) || 0;
-        document.getElementById("dispSmart").innerText = parseInt(document.getElementById("inputSmartphoneNum").value) || 0;
+        document.getElementById("dispSite").innerText = siteNum;
+        document.getElementById("dispIp").innerText = ipPhoneNum;
+        document.getElementById("dispSmart").innerText = smartNumAdjusted; // 調整後の値を表示
 
         // --- 月額費用の計算 ---
         
@@ -310,14 +318,14 @@
         document.getElementById("rowIpVoiceBaseQty").innerText = ipVoiceQty;
         document.getElementById("rowIpVoiceBasePrice").innerText = ipVoicePrice.toLocaleString();
 
-        // 4. チャネル追加料 (チャネル数 - 1契約)
+        // 4. チャネル追加料
         let chAddQty = channelNum - ipVoiceQty; 
         if (chAddQty < 0) chAddQty = 0;
         const chAddPrice = chAddQty * 580;
         document.getElementById("rowChAddQty").innerText = chAddQty;
         document.getElementById("rowChAddPrice").innerText = chAddPrice.toLocaleString();
 
-        // 5. 番号追加料 (番号数 - 1契約)
+        // 5. 番号追加料
         let numAddQty = phoneNum - ipVoiceQty;
         if (numAddQty < 0) numAddQty = 0;
         const numAddPrice = numAddQty * 100;
@@ -363,14 +371,17 @@
     // PDF生成関数
     function generatePDF() {
         const element = document.getElementById('quotationResult');
+        
+        // PDFオプション
         const opt = {
             margin:       0.5,
             filename:     'quotation_estimate.pdf',
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2 },
+            html2canvas:  { scale: 2, useCORS: true }, // useCORSを追加
             jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
         };
-        // 調整用入力欄などの非表示はCSSで制御
+        
+        // 処理実行
         html2pdf().set(opt).from(element).save();
     }
 </script>
