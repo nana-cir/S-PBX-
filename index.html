@@ -123,6 +123,7 @@
                     <div class="form-text text-muted" style="font-size: 0.75rem;">※変更するとチャネル追加料が変わります</div>
                 </div>
             </div>
+            
             <hr class="my-2">
             
             <div class="row">
@@ -183,31 +184,31 @@
                 <tbody>
                     <tr>
                         <td>ID利用料</td>
-                        <td class="text-end">500</td>
+                        <td class="text-end"><span id="priceUnitId"></span></td>
                         <td class="text-end" id="rowIdCount">0</td>
                         <td class="text-end fw-bold" id="rowIdPrice">0</td>
                     </tr>
                     <tr>
                         <td>Arcstar Smart PBX基本料</td>
-                        <td class="text-end">5,000</td>
+                        <td class="text-end"><span id="priceUnitSmartPbxBase"></span></td>
                         <td class="text-end" id="rowSmartPbxBaseQty">1</td>
-                        <td class="text-end fw-bold" id="rowSmartPbxBasePrice">5,000</td>
+                        <td class="text-end fw-bold" id="rowSmartPbxBasePrice">0</td>
                     </tr>
                     <tr>
                         <td>Arcstar IP-Voice基本料</td>
-                        <td class="text-end">580</td>
+                        <td class="text-end"><span id="priceUnitIpVoiceBase"></span></td>
                         <td class="text-end" id="rowIpVoiceBaseQty">1</td>
-                        <td class="text-end fw-bold" id="rowIpVoiceBasePrice">580</td>
+                        <td class="text-end fw-bold" id="rowIpVoiceBasePrice">0</td>
                     </tr>
                     <tr>
                         <td>チャネル追加料<br><small class="text-muted" style="font-size:0.7rem">(チャネル数 - 1契約)</small></td>
-                        <td class="text-end">580</td>
+                        <td class="text-end"><span id="priceUnitChAdd"></span></td>
                         <td class="text-end" id="rowChAddQty">0</td>
                         <td class="text-end fw-bold" id="rowChAddPrice">0</td>
                     </tr>
                     <tr>
                         <td>番号追加料金<br><small class="text-muted" style="font-size:0.7rem">(電話番号数 - 1契約)</small></td>
-                        <td class="text-end">100</td>
+                        <td class="text-end"><span id="priceUnitNumAdd"></span></td>
                         <td class="text-end" id="rowNumAddQty">0</td>
                         <td class="text-end fw-bold" id="rowNumAddPrice">0</td>
                     </tr>
@@ -233,25 +234,25 @@
                 <tbody>
                     <tr>
                         <td>SmartPBX新設工事費</td>
-                        <td class="text-end">14,000</td>
+                        <td class="text-end"><span id="priceUnitSmartPbxInit"></span></td>
                         <td class="text-end" id="rowSmartPbxInitQty">1</td>
-                        <td class="text-end fw-bold" id="rowSmartPbxInitPrice">14,000</td>
+                        <td class="text-end fw-bold" id="rowSmartPbxInitPrice">0</td>
                     </tr>
                     <tr>
                         <td>IP-Voice基本工事費</td>
-                        <td class="text-end">2,800</td>
+                        <td class="text-end"><span id="priceUnitIpVoiceInit"></span></td>
                         <td class="text-end" id="rowIpVoiceInitQty">1</td>
-                        <td class="text-end fw-bold" id="rowIpVoiceInitPrice">2,800</td>
+                        <td class="text-end fw-bold" id="rowIpVoiceInitPrice">0</td>
                     </tr>
                     <tr>
                         <td>IP-Voice MNP手数料</td>
-                        <td class="text-end">2,000</td>
+                        <td class="text-end"><span id="priceUnitMnp"></span></td>
                         <td class="text-end" id="rowMnpQty">1</td>
-                        <td class="text-end fw-bold" id="rowMnpPrice">2,000</td>
+                        <td class="text-end fw-bold" id="rowMnpPrice">0</td>
                     </tr>
                     <tr>
                         <td>IP-Phone機器代金</td>
-                        <td class="text-end">49,000</td>
+                        <td class="text-end"><span id="priceUnitIpPhoneHw"></span></td>
                         <td class="text-end" id="rowIpPhoneHwQty">0</td>
                         <td class="text-end fw-bold" id="rowIpPhoneHwPrice">0</td>
                     </tr>
@@ -292,6 +293,26 @@
 </div>
 
 <script>
+    // ============================================
+    // ★ 単価設定エリア (価格改定時はここを変更) ★
+    // ============================================
+    const PRICES = {
+        monthly: {
+            id: 500,               // ID利用料
+            smartPbxBase: 5000,    // Smart PBX 基本料
+            ipVoiceBase: 580,      // IP-Voice 基本料
+            channelAdd: 580,       // チャネル追加料
+            numberAdd: 100         // 番号追加料
+        },
+        initial: {
+            smartPbxInit: 14000,   // Smart PBX 工事費
+            ipVoiceInit: 2800,     // IP-Voice 工事費
+            mnpFee: 2000,          // MNP手数料
+            ipPhoneHw: 49000       // IP-Phone 機器代
+        }
+    };
+    // ============================================
+
     // 現在日付のセット
     const today = new Date();
     const dateStr = today.getFullYear() + "年" + (today.getMonth() + 1) + "月" + today.getDate() + "日";
@@ -310,7 +331,7 @@
         document.getElementById("confIpPhoneHwQty").value = ipPhoneNum;
         document.getElementById("confSmartphoneQty").value = smartNum;
         
-        // ★追加：電話番号とチャネルの調整欄にも初期値をセット
+        // 電話番号とチャネルの調整欄にも初期値をセット
         document.getElementById("confPhoneNum").value = phoneNum;
         document.getElementById("confChannelNum").value = channelNum;
 
@@ -346,7 +367,7 @@
         const mnpQty = parseInt(document.getElementById("confMnpQty").value) || 0;
         const ipPhoneAdjusted = parseInt(document.getElementById("confIpPhoneHwQty").value) || 0;
         
-        // ★修正：調整後の電話番号数とチャネル数を取得して計算に使う
+        // 調整後の電話番号数とチャネル数を取得
         const phoneNumAdjusted = parseInt(document.getElementById("confPhoneNum").value) || 0;
         const channelNumAdjusted = parseInt(document.getElementById("confChannelNum").value) || 0;
 
@@ -355,58 +376,78 @@
         
         // 内訳表示更新
         document.getElementById("displayIdCount").innerText = idCount;
-        document.getElementById("dispNum").innerText = phoneNumAdjusted; // 調整値を表示
+        document.getElementById("dispNum").innerText = phoneNumAdjusted;
         document.getElementById("dispSite").innerText = siteNum;
         document.getElementById("dispIp").innerText = ipPhoneAdjusted; 
         document.getElementById("dispSmart").innerText = smartNumAdjusted;
 
         // --- 月額費用の計算 ---
-        const idPrice = idCount * 500;
+        
+        // ID利用料
+        const idPrice = idCount * PRICES.monthly.id;
+        document.getElementById("priceUnitId").innerText = PRICES.monthly.id.toLocaleString();
         document.getElementById("rowIdCount").innerText = idCount;
         document.getElementById("rowIdPrice").innerText = idPrice.toLocaleString();
 
-        const smartPbxPrice = smartPbxQty * 5000;
+        // Smart PBX 基本料
+        const smartPbxPrice = smartPbxQty * PRICES.monthly.smartPbxBase;
+        document.getElementById("priceUnitSmartPbxBase").innerText = PRICES.monthly.smartPbxBase.toLocaleString();
         document.getElementById("rowSmartPbxBaseQty").innerText = smartPbxQty;
         document.getElementById("rowSmartPbxBasePrice").innerText = smartPbxPrice.toLocaleString();
 
-        const ipVoicePrice = ipVoiceQty * 580;
+        // IP-Voice 基本料
+        const ipVoicePrice = ipVoiceQty * PRICES.monthly.ipVoiceBase;
+        document.getElementById("priceUnitIpVoiceBase").innerText = PRICES.monthly.ipVoiceBase.toLocaleString();
         document.getElementById("rowIpVoiceBaseQty").innerText = ipVoiceQty;
         document.getElementById("rowIpVoiceBasePrice").innerText = ipVoicePrice.toLocaleString();
 
         // チャネル追加料（調整後の値 - 基本1）
         let chAddQty = channelNumAdjusted - ipVoiceQty; 
         if (chAddQty < 0) chAddQty = 0;
-        const chAddPrice = chAddQty * 580;
+        const chAddPrice = chAddQty * PRICES.monthly.channelAdd;
+        document.getElementById("priceUnitChAdd").innerText = PRICES.monthly.channelAdd.toLocaleString();
         document.getElementById("rowChAddQty").innerText = chAddQty;
         document.getElementById("rowChAddPrice").innerText = chAddPrice.toLocaleString();
 
         // 番号追加料（調整後の値 - 基本1）
         let numAddQty = phoneNumAdjusted - ipVoiceQty;
         if (numAddQty < 0) numAddQty = 0;
-        const numAddPrice = numAddQty * 100;
+        const numAddPrice = numAddQty * PRICES.monthly.numberAdd;
+        document.getElementById("priceUnitNumAdd").innerText = PRICES.monthly.numberAdd.toLocaleString();
         document.getElementById("rowNumAddQty").innerText = numAddQty;
         document.getElementById("rowNumAddPrice").innerText = numAddPrice.toLocaleString();
 
+        // 月額合計
         const totalMonthly = idPrice + smartPbxPrice + ipVoicePrice + chAddPrice + numAddPrice;
         document.getElementById("totalMonthly").innerText = totalMonthly.toLocaleString();
 
         // --- 初期費用の計算 ---
-        const smartPbxInitPrice = smartPbxInitQty * 14000;
+        
+        // SmartPBX 工事費
+        const smartPbxInitPrice = smartPbxInitQty * PRICES.initial.smartPbxInit;
+        document.getElementById("priceUnitSmartPbxInit").innerText = PRICES.initial.smartPbxInit.toLocaleString();
         document.getElementById("rowSmartPbxInitQty").innerText = smartPbxInitQty;
         document.getElementById("rowSmartPbxInitPrice").innerText = smartPbxInitPrice.toLocaleString();
 
-        const ipVoiceInitPrice = ipVoiceInitQty * 2800;
+        // IP-Voice 工事費
+        const ipVoiceInitPrice = ipVoiceInitQty * PRICES.initial.ipVoiceInit;
+        document.getElementById("priceUnitIpVoiceInit").innerText = PRICES.initial.ipVoiceInit.toLocaleString();
         document.getElementById("rowIpVoiceInitQty").innerText = ipVoiceInitQty;
         document.getElementById("rowIpVoiceInitPrice").innerText = ipVoiceInitPrice.toLocaleString();
 
-        const mnpPrice = mnpQty * 2000;
+        // MNP手数料
+        const mnpPrice = mnpQty * PRICES.initial.mnpFee;
+        document.getElementById("priceUnitMnp").innerText = PRICES.initial.mnpFee.toLocaleString();
         document.getElementById("rowMnpQty").innerText = mnpQty;
         document.getElementById("rowMnpPrice").innerText = mnpPrice.toLocaleString();
 
-        const ipPhoneHwPrice = ipPhoneAdjusted * 49000;
+        // IP-Phone 機器代
+        const ipPhoneHwPrice = ipPhoneAdjusted * PRICES.initial.ipPhoneHw;
+        document.getElementById("priceUnitIpPhoneHw").innerText = PRICES.initial.ipPhoneHw.toLocaleString();
         document.getElementById("rowIpPhoneHwQty").innerText = ipPhoneAdjusted;
         document.getElementById("rowIpPhoneHwPrice").innerText = ipPhoneHwPrice.toLocaleString();
 
+        // 初期費用合計
         const totalInitial = smartPbxInitPrice + ipVoiceInitPrice + mnpPrice + ipPhoneHwPrice;
         document.getElementById("totalInitial").innerText = totalInitial.toLocaleString();
     }
