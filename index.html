@@ -15,7 +15,7 @@
         .card { border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .card-header { background-color: #0d6efd; color: white; font-weight: bold; }
         
-        /* ★スマホ対策：入力フォームの文字サイズを16px以上にして視認性を向上 */
+        /* スマホ対策：入力フォームの文字サイズを16px以上にして視認性を向上 */
         input.form-control { font-size: 16px; }
 
         /* 見積結果エリア */
@@ -97,6 +97,7 @@
         </div>
         <div class="card-body">
             <p class="small text-muted mb-3">※ヒアリング内容に基づき自動設定されています。必要に応じて変更してください。</p>
+            
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="small fw-bold">スマホ台数（ID課金対象）</label>
@@ -109,7 +110,19 @@
                     <div class="form-text text-muted" style="font-size: 0.75rem;">※変更するとID利用料・機器代が変わります</div>
                 </div>
             </div>
-            
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="small fw-bold">電話番号数（ID数・月額追加料）</label>
+                    <input type="number" id="confPhoneNum" class="form-control" value="1">
+                    <div class="form-text text-muted" style="font-size: 0.75rem;">※変更するとID利用料・番号追加料が変わります</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="small fw-bold">チャネル数（月額追加料）</label>
+                    <input type="number" id="confChannelNum" class="form-control" value="1">
+                    <div class="form-text text-muted" style="font-size: 0.75rem;">※変更するとチャネル追加料が変わります</div>
+                </div>
+            </div>
             <hr class="my-2">
             
             <div class="row">
@@ -288,6 +301,7 @@
     function showAdjustment() {
         // ヒアリング値の取得
         const phoneNum = parseInt(document.getElementById("inputPhoneNum").value) || 0;
+        const channelNum = parseInt(document.getElementById("inputChannelNum").value) || 0;
         const ipPhoneNum = parseInt(document.getElementById("inputIpPhoneNum").value) || 0;
         const smartNum = parseInt(document.getElementById("inputSmartphoneNum").value) || 0;
 
@@ -295,6 +309,10 @@
         document.getElementById("confMnpQty").value = phoneNum; 
         document.getElementById("confIpPhoneHwQty").value = ipPhoneNum;
         document.getElementById("confSmartphoneQty").value = smartNum;
+        
+        // ★追加：電話番号とチャネルの調整欄にも初期値をセット
+        document.getElementById("confPhoneNum").value = phoneNum;
+        document.getElementById("confChannelNum").value = channelNum;
 
         // 次のセクションを表示
         document.getElementById("adjustmentSection").style.display = "block";
@@ -316,11 +334,8 @@
 
     // 再計算ロジック
     function reCalc() {
-        // ヒアリングフォームからの値（不変）
-        const phoneNumHearing = parseInt(document.getElementById("inputPhoneNum").value) || 0;
-        const channelNumHearing = parseInt(document.getElementById("inputChannelNum").value) || 0;
+        // ヒアリングフォームからの値（拠点数など不変のもの）
         const siteNum = parseInt(document.getElementById("inputSiteNum").value) || 0;
-        // ※ここではヒアリングのIP-Phone台数は使わず、調整値を使う
 
         // 調整項目の取得（可変）
         const smartNumAdjusted = parseInt(document.getElementById("confSmartphoneQty").value) || 0;
@@ -329,18 +344,20 @@
         const smartPbxInitQty = parseInt(document.getElementById("confSmartPbxInitQty").value) || 0;
         const ipVoiceInitQty = parseInt(document.getElementById("confIpVoiceInitQty").value) || 0;
         const mnpQty = parseInt(document.getElementById("confMnpQty").value) || 0;
-        
-        // ★修正点: ID数計算に「調整後のIP-Phone台数」を使用する
         const ipPhoneAdjusted = parseInt(document.getElementById("confIpPhoneHwQty").value) || 0;
+        
+        // ★修正：調整後の電話番号数とチャネル数を取得して計算に使う
+        const phoneNumAdjusted = parseInt(document.getElementById("confPhoneNum").value) || 0;
+        const channelNumAdjusted = parseInt(document.getElementById("confChannelNum").value) || 0;
 
-        // ID数 = 電話番号 + 拠点 + 固定電話(調整値) + スマホ(調整値)
-        const idCount = phoneNumHearing + siteNum + ipPhoneAdjusted + smartNumAdjusted;
+        // ID数 = 電話番号(調整値) + 拠点 + 固定電話(調整値) + スマホ(調整値)
+        const idCount = phoneNumAdjusted + siteNum + ipPhoneAdjusted + smartNumAdjusted;
         
         // 内訳表示更新
         document.getElementById("displayIdCount").innerText = idCount;
-        document.getElementById("dispNum").innerText = phoneNumHearing;
+        document.getElementById("dispNum").innerText = phoneNumAdjusted; // 調整値を表示
         document.getElementById("dispSite").innerText = siteNum;
-        document.getElementById("dispIp").innerText = ipPhoneAdjusted; // 調整値を表示
+        document.getElementById("dispIp").innerText = ipPhoneAdjusted; 
         document.getElementById("dispSmart").innerText = smartNumAdjusted;
 
         // --- 月額費用の計算 ---
@@ -356,15 +373,15 @@
         document.getElementById("rowIpVoiceBaseQty").innerText = ipVoiceQty;
         document.getElementById("rowIpVoiceBasePrice").innerText = ipVoicePrice.toLocaleString();
 
-        // チャネル追加料
-        let chAddQty = channelNumHearing - ipVoiceQty; 
+        // チャネル追加料（調整後の値 - 基本1）
+        let chAddQty = channelNumAdjusted - ipVoiceQty; 
         if (chAddQty < 0) chAddQty = 0;
         const chAddPrice = chAddQty * 580;
         document.getElementById("rowChAddQty").innerText = chAddQty;
         document.getElementById("rowChAddPrice").innerText = chAddPrice.toLocaleString();
 
-        // 番号追加料
-        let numAddQty = phoneNumHearing - ipVoiceQty;
+        // 番号追加料（調整後の値 - 基本1）
+        let numAddQty = phoneNumAdjusted - ipVoiceQty;
         if (numAddQty < 0) numAddQty = 0;
         const numAddPrice = numAddQty * 100;
         document.getElementById("rowNumAddQty").innerText = numAddQty;
