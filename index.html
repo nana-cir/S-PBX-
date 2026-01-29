@@ -73,7 +73,7 @@
                         <input type="number" class="form-control" id="inputIpPhoneNum" value="0" min="0">
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label class="form-label">④ 拠点数</label>
+                        <label class="form-label">④ 着信グループ数</label>
                         <input type="number" class="form-control" id="inputSiteNum" value="1" min="1">
                     </div>
                     <div class="col-md-4 mb-3">
@@ -168,7 +168,7 @@
             
             <div class="alert alert-light border text-center" role="alert">
                 <h4 class="alert-heading mb-0 h5">ID数合計: <span id="displayIdCount" class="fw-bold">0</span> ID</h4>
-                <small class="text-muted" style="font-size: 0.8rem;">（内訳：番号 <span id="dispNum"></span> + 拠点 <span id="dispSite"></span> + IP-Phone <span id="dispIp"></span> + スマホ <span id="dispSmart"></span>）</small>
+                <small class="text-muted" style="font-size: 0.8rem;">（内訳：番号 <span id="dispNum"></span> + 着信グループ数 <span id="dispSite"></span> + IP-Phone <span id="dispIp"></span> + スマホ <span id="dispSmart"></span>）</small>
             </div>
 
             <h5 class="mt-4 border-bottom pb-2 h6">【月額費用】</h5>
@@ -355,7 +355,7 @@
 
     // 再計算ロジック
     function reCalc() {
-        // ヒアリングフォームからの値（拠点数など不変のもの）
+        // ヒアリングフォームからの値（着信グループ数数など不変のもの）
         const siteNum = parseInt(document.getElementById("inputSiteNum").value) || 0;
 
         // 調整項目の取得（可変）
@@ -371,7 +371,7 @@
         const phoneNumAdjusted = parseInt(document.getElementById("confPhoneNum").value) || 0;
         const channelNumAdjusted = parseInt(document.getElementById("confChannelNum").value) || 0;
 
-        // ID数 = 電話番号(調整値) + 拠点 + 固定電話(調整値) + スマホ(調整値)
+        // ID数 = 電話番号(調整値) + 着信グループ数 + 固定電話(調整値) + スマホ(調整値)
         const idCount = phoneNumAdjusted + siteNum + ipPhoneAdjusted + smartNumAdjusted;
         
         // 内訳表示更新
