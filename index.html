@@ -113,9 +113,9 @@
 
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="small fw-bold">電話番号数（ID数・月額追加料）</label>
+                    <label class="small fw-bold">電話番号数（月額追加料）</label>
                     <input type="number" id="confPhoneNum" class="form-control" value="1">
-                    <div class="form-text text-muted" style="font-size: 0.75rem;">※変更するとID利用料・番号追加料が変わります</div>
+                    <div class="form-text text-muted" style="font-size: 0.75rem;">※変更すると番号追加料が変わります</div>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label class="small fw-bold">チャネル数（月額追加料）</label>
@@ -168,7 +168,7 @@
             
             <div class="alert alert-light border text-center" role="alert">
                 <h4 class="alert-heading mb-0 h5">ID数合計: <span id="displayIdCount" class="fw-bold">0</span> ID</h4>
-                <small class="text-muted" style="font-size: 0.8rem;">（内訳：番号 <span id="dispNum"></span> + 着信グループ数 <span id="dispSite"></span> + IP-Phone <span id="dispIp"></span> + スマホ <span id="dispSmart"></span>）</small>
+                <small class="text-muted" style="font-size: 0.8rem;">（内訳：着信グループ <span id="dispSite"></span> + IP-Phone <span id="dispIp"></span> + スマホ <span id="dispSmart"></span>）</small>
             </div>
 
             <h5 class="mt-4 border-bottom pb-2 h6">【月額費用】</h5>
@@ -371,12 +371,13 @@
         const phoneNumAdjusted = parseInt(document.getElementById("confPhoneNum").value) || 0;
         const channelNumAdjusted = parseInt(document.getElementById("confChannelNum").value) || 0;
 
-        // ID数 = 電話番号(調整値) + 着信グループ数 + 固定電話(調整値) + スマホ(調整値)
-        const idCount = phoneNumAdjusted + siteNum + ipPhoneAdjusted + smartNumAdjusted;
+        // ID数 = 着信グループ数 + 固定電話(調整値) + スマホ(調整値)
+        // ※修正：電話番号数は含めない
+        const idCount = siteNum + ipPhoneAdjusted + smartNumAdjusted;
         
         // 内訳表示更新
         document.getElementById("displayIdCount").innerText = idCount;
-        document.getElementById("dispNum").innerText = phoneNumAdjusted;
+        // dispNum (番号) は内訳から削除
         document.getElementById("dispSite").innerText = siteNum;
         document.getElementById("dispIp").innerText = ipPhoneAdjusted; 
         document.getElementById("dispSmart").innerText = smartNumAdjusted;
