@@ -146,6 +146,17 @@
                     <input type="number" id="confIpVoiceInitQty" class="form-control form-control-sm" value="1">
                 </div>
             </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label class="small">IP Voice(Smart PBX)付加工事費 (@1,400)</label>
+                    <input type="number" id="confSmartPbxAddQty" class="form-control form-control-sm" value="1">
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label class="small">IP Voiceアクセスセット付加工事費 (@1,400)</label>
+                    <input type="number" id="confAccessSetAddQty" class="form-control form-control-sm" value="1">
+                </div>
+            </div>
             <div class="row">
                 <div class="col-md-6 mb-2">
                     <label class="small">IP-Voice MNP手数料数 (@2,000)</label>
@@ -244,6 +255,19 @@
                         <td class="text-end" id="rowIpVoiceInitQty">1</td>
                         <td class="text-end fw-bold" id="rowIpVoiceInitPrice">0</td>
                     </tr>
+                    
+                    <tr>
+                        <td>IP Voice(Smart PBX)付加工事費</td>
+                        <td class="text-end"><span id="priceUnitSmartPbxAdd"></span></td>
+                        <td class="text-end" id="rowSmartPbxAddQty">0</td>
+                        <td class="text-end fw-bold" id="rowSmartPbxAddPrice">0</td>
+                    </tr>
+                    <tr>
+                        <td>IP Voiceアクセスセット付加工事費</td>
+                        <td class="text-end"><span id="priceUnitAccessSetAdd"></span></td>
+                        <td class="text-end" id="rowAccessSetAddQty">0</td>
+                        <td class="text-end fw-bold" id="rowAccessSetAddPrice">0</td>
+                    </tr>
                     <tr>
                         <td>IP-Voice MNP手数料</td>
                         <td class="text-end"><span id="priceUnitMnp"></span></td>
@@ -307,6 +331,8 @@
         initial: {
             smartPbxInit: 14000,   // Smart PBX 工事費
             ipVoiceInit: 2800,     // IP-Voice 工事費
+            smartPbxAdd: 1400,     // IP Voice(Smart PBX)付加工事費 (追加)
+            accessSetAdd: 1400,    // IP Voiceアクセスセット付加工事費 (追加)
             mnpFee: 2000,          // MNP手数料
             ipPhoneHw: 49000       // IP-Phone 機器代
         }
@@ -367,17 +393,19 @@
         const mnpQty = parseInt(document.getElementById("confMnpQty").value) || 0;
         const ipPhoneAdjusted = parseInt(document.getElementById("confIpPhoneHwQty").value) || 0;
         
+        // ★追加項目の数量取得
+        const smartPbxAddQty = parseInt(document.getElementById("confSmartPbxAddQty").value) || 0;
+        const accessSetAddQty = parseInt(document.getElementById("confAccessSetAddQty").value) || 0;
+        
         // 調整後の電話番号数とチャネル数を取得
         const phoneNumAdjusted = parseInt(document.getElementById("confPhoneNum").value) || 0;
         const channelNumAdjusted = parseInt(document.getElementById("confChannelNum").value) || 0;
 
         // ID数 = 着信グループ数 + 固定電話(調整値) + スマホ(調整値)
-        // ※修正：電話番号数は含めない
         const idCount = siteNum + ipPhoneAdjusted + smartNumAdjusted;
         
         // 内訳表示更新
         document.getElementById("displayIdCount").innerText = idCount;
-        // dispNum (番号) は内訳から削除
         document.getElementById("dispSite").innerText = siteNum;
         document.getElementById("dispIp").innerText = ipPhoneAdjusted; 
         document.getElementById("dispSmart").innerText = smartNumAdjusted;
@@ -436,6 +464,19 @@
         document.getElementById("rowIpVoiceInitQty").innerText = ipVoiceInitQty;
         document.getElementById("rowIpVoiceInitPrice").innerText = ipVoiceInitPrice.toLocaleString();
 
+        // ★追加項目の計算 (初期費用として加算)
+        // SmartPBX 付加工事費
+        const smartPbxAddPrice = smartPbxAddQty * PRICES.initial.smartPbxAdd;
+        document.getElementById("priceUnitSmartPbxAdd").innerText = PRICES.initial.smartPbxAdd.toLocaleString();
+        document.getElementById("rowSmartPbxAddQty").innerText = smartPbxAddQty;
+        document.getElementById("rowSmartPbxAddPrice").innerText = smartPbxAddPrice.toLocaleString();
+
+        // アクセスセット 付加工事費
+        const accessSetAddPrice = accessSetAddQty * PRICES.initial.accessSetAdd;
+        document.getElementById("priceUnitAccessSetAdd").innerText = PRICES.initial.accessSetAdd.toLocaleString();
+        document.getElementById("rowAccessSetAddQty").innerText = accessSetAddQty;
+        document.getElementById("rowAccessSetAddPrice").innerText = accessSetAddPrice.toLocaleString();
+
         // MNP手数料
         const mnpPrice = mnpQty * PRICES.initial.mnpFee;
         document.getElementById("priceUnitMnp").innerText = PRICES.initial.mnpFee.toLocaleString();
@@ -448,8 +489,8 @@
         document.getElementById("rowIpPhoneHwQty").innerText = ipPhoneAdjusted;
         document.getElementById("rowIpPhoneHwPrice").innerText = ipPhoneHwPrice.toLocaleString();
 
-        // 初期費用合計
-        const totalInitial = smartPbxInitPrice + ipVoiceInitPrice + mnpPrice + ipPhoneHwPrice;
+        // 初期費用合計 (追加項目分を加算)
+        const totalInitial = smartPbxInitPrice + ipVoiceInitPrice + smartPbxAddPrice + accessSetAddPrice + mnpPrice + ipPhoneHwPrice;
         document.getElementById("totalInitial").innerText = totalInitial.toLocaleString();
     }
 
